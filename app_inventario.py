@@ -17,7 +17,7 @@ st.markdown("""
 
 # --- 2. CONEXIÓN ---
 # 🚨 PEGA AQUÍ TU LINK DE GOOGLE SHEETS
-URL_HOJA = "TU_LINK_AQUI"
+URL_HOJA = "https://docs.google.com/spreadsheets/d/108HEgQ1pkzxjxwYEU2YqhvkWGdkar7rvEPTVyI2CUAE/edit?gid=2121698156#gid=2121698156"
 
 def cargar_datos(pestana):
     try:
@@ -35,7 +35,7 @@ if 'usuario' not in st.session_state:
     st.session_state.ventas_acumuladas = 0.0
 
 if st.session_state.usuario is None:
-    st.title("🔐 Acceso al Sistema")
+    st.title(" Acceso al Sistema")
     with st.form("login"):
         u = st.text_input("Usuario:").strip().lower()
         p = st.text_input("PIN (4 dígitos):", type="password")
@@ -65,7 +65,7 @@ else:
     with st.sidebar:
         st.title(f"👤 {st.session_state.usuario}")
         st.write(f"⏰ Entrada: {st.session_state.entrada.strftime('%H:%M')}")
-        if st.button("🔴 CERRAR TURNO"):
+        if st.button(" CERRAR TURNO"):
             st.session_state.usuario = None
             st.rerun()
 

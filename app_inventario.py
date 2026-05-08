@@ -32,7 +32,7 @@ if 'usuario' not in st.session_state:
 
 # Pantalla de Login
 if st.session_state.usuario is None:
-    st.title("🔐 Acceso al Sistema de Gestión")
+    st.title(" Acceso al Sistema de Gestión")
     autorizados = ["estefany", "milagros", "milagro", "gabriela", "mario"]
     
     with st.form("login_form"):
@@ -45,14 +45,14 @@ if st.session_state.usuario is None:
                 st.success(f"Bienvenida {st.session_state.usuario}")
                 st.rerun()
             else:
-                st.error("❌ Usuario o PIN incorrectos")
+                st.error(" Usuario o PIN incorrectos")
 else:
     # --- 4. BARRA LATERAL ---
     with st.sidebar:
-        st.header(f"👤 {st.session_state.usuario}")
+        st.header(f" {st.session_state.usuario}")
         st.info(f"📅 {datetime.now().strftime('%d/%m/%Y')}\n\n⏰ Entrada: {st.session_state.entrada.strftime('%H:%M:%S')}")
         
-        if st.button("🔴 CERRAR TURNO Y GENERAR REPORTE"):
+        if st.button(" CERRAR TURNO Y GENERAR REPORTE"):
             duracion = datetime.now() - st.session_state.entrada
             st.warning(f"Resumen: Vendiste ${st.session_state.ventas_acumuladas} en {str(duracion).split('.')[0]}")
             st.session_state.usuario = None
@@ -117,7 +117,7 @@ else:
             lista_productos = df['Producto'].tolist()
             prod_vender = st.selectbox("Seleccione el producto vendido:", lista_productos)
             
-            if st.button("🚀 CONFIRMAR VENTA"):
+            if st.button(" CONFIRMAR VENTA"):
                 idx = df[df['Producto'] == prod_vender].index[0]
                 if int(df.at[idx, 'Stock']) > 0:
                     # Actualizar memoria de ventas
@@ -130,6 +130,6 @@ else:
                     st.success(f"Venta de {prod_vender} registrada con éxito")
                     st.rerun()
                 else:
-                    st.error("❌ No hay suficiente stock para vender este producto.")
+                    st.error(" No hay suficiente stock para vender este producto.")
         else:
             st.info("No hay productos registrados. Agrégalos en la pestaña de Inventario.")

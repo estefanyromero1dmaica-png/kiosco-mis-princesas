@@ -82,7 +82,7 @@ st.markdown("""
 
 # --- 3. CONEXIÓN Y CARGA DE DATOS ---
 # 🚨 REEMPLAZA ESTO CON TU LINK REAL
-URL_HOJA = "https://docs.google.com/spreadsheets/d/108HEgQ1pkzxjxwYEU2YqhvkWGdkar7rvEPTVyI2CUAE/edit?gid=2121698156#gid=2121698156"
+URL_HOJA = "https://docs.google.com/spreadsheets/d/1xNrFyCRFpU4LeBehOQwJQOS2pwEnNMVP35iUWrrjvwc/edit?pli=1&gid=549178331#gid=549178331"
 
 def cargar_datos(pestana):
     try:

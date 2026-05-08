@@ -22,7 +22,7 @@ st.markdown("""
 
 # --- 2. CONEXIÓN Y CARGA DE DATOS ---
 # 🚨 PEGA TU LINK AQUÍ:
-URL_HOJA = "TU_LINK_DE_GOOGLE_SHEETS_AQUI"
+URL_HOJA = "https://docs.google.com/spreadsheets/d/108HEgQ1pkzxjxwYEU2YqhvkWGdkar7rvEPTVyI2CUAE/edit?gid=0#gid=0"
 
 def conectar_nube():
     try:
@@ -52,7 +52,7 @@ if 'usuario' not in st.session_state:
 
 # Lógica de Login
 if st.session_state.usuario is None:
-    st.title("🔐 Acceso de Seguridad - Kiosco")
+    st.title(" Acceso de Seguridad - Kiosco")
     st.markdown("---")
     
     col_login, _ = st.columns([1, 2])
@@ -78,10 +78,10 @@ if st.session_state.usuario is None:
                         conn = conectar_nube()
                         conn.update(spreadsheet=URL_HOJA, worksheet="Asistencia", data=df_final_asistencia)
                     
-                    st.success("✅ Acceso concedido. Registro de asistencia guardado.")
+                    st.success(" Acceso concedido. Registro de asistencia guardado.")
                     st.rerun()
                 else:
-                    st.error("❌ Credenciales incorrectas. Verifique nombre y PIN.")
+                    st.error(" Credenciales incorrectas. Verifique nombre y PIN.")
 else:
     # --- 4. BARRA LATERAL PROFESIONAL ---
     with st.sidebar:
@@ -91,7 +91,7 @@ else:
         st.write(f"⏰ Hora Entrada: {st.session_state.entrada.strftime('%H:%M:%S')}")
         st.divider()
         
-        if st.button("🔴 CERRAR TURNO Y SALIR"):
+        if st.button(" CERRAR TURNO Y SALIR"):
             duracion = datetime.now() - st.session_state.entrada
             st.warning(f"Resumen de sesión: ${st.session_state.ventas_acumuladas} vendidos en {str(duracion).split('.')[0]}")
             st.session_state.usuario = None
@@ -126,7 +126,7 @@ else:
         st.subheader("Gestión de Inventario en la Nube")
         
         # BUSCADOR
-        query = st.text_input("🔍 Buscar por nombre de producto...", placeholder="Escribe para filtrar...")
+        query = st.text_input(" Buscar por nombre de producto...", placeholder="Escribe para filtrar...")
         
         df_filtrado = df_inventario[df_inventario['Producto'].str.contains(query, case=False, na=False)] if query else df_inventario
 
@@ -196,4 +196,4 @@ else:
         }
         
         calendar(events=eventos_calendario, options=cal_options)
-        st.write("📌 El calendario marca automáticamente los días en los que iniciaste sesión.")
+        st.write(" El calendario marca automáticamente los días en los que iniciaste sesión.")

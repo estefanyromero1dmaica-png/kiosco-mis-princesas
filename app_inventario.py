@@ -22,7 +22,7 @@ st.markdown("""
 
 # --- 2. CONEXIÓN Y CARGA DE DATOS ---
 # 🚨 PEGA TU LINK AQUÍ:
-URL_HOJA = "TU_LINK_DE_GOOGLE_SHEETS_AQUI"
+URL_HOJA = "https://docs.google.com/spreadsheets/d/108HEgQ1pkzxjxwYEU2YqhvkWGdkar7rvEPTVyI2CUAE/edit?gid=0#gid=0"
 
 def conectar_nube():
     try:
@@ -50,7 +50,7 @@ if 'usuario' not in st.session_state:
     st.session_state.ventas_acumuladas = 0.0
 
 if st.session_state.usuario is None:
-    st.title("🔐 Acceso de Seguridad - Kiosco")
+    st.title(" Acceso de Seguridad - Kiosco")
     col_login, _ = st.columns([1, 2])
     with col_login:
         with st.form("login_form"):
@@ -71,13 +71,13 @@ if st.session_state.usuario is None:
                         con.update(spreadsheet=URL_HOJA, worksheet="Asistencia", data=df_final_asist)
                     st.rerun()
                 else:
-                    st.error("❌ Credenciales incorrectas")
+                    st.error(" Credenciales incorrectas")
 else:
     # --- 4. INTERFAZ PRINCIPAL ---
     with st.sidebar:
         st.title(f"👤 {st.session_state.usuario}")
         st.write(f"⏰ Entrada: {st.session_state.entrada.strftime('%H:%M')}")
-        if st.button("🔴 CERRAR TURNO"):
+        if st.button(" CERRAR TURNO"):
             st.session_state.usuario = None
             st.rerun()
 
@@ -95,7 +95,7 @@ else:
         bajos = df_inv[df_inv['Stock'].astype(int) < 5] if not df_inv.empty else pd.DataFrame()
         c3.metric("Stock Crítico", len(bajos))
         if not bajos.empty:
-            st.warning("⚠️ Reponer pronto:")
+            st.warning(" Reponer pronto:")
             st.table(bajos)
 
     with t2:

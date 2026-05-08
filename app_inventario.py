@@ -105,7 +105,7 @@ if st.session_state.usuario is None:
                     st.rerun()
                 else:
                     st.error("🚫 Acceso denegado. Verifica el usuario o el PIN.")
-else:
+
   # --- 4. INTERFAZ PRINCIPAL (CENTRO DE CONTROL) ---
 with st.sidebar:
     st.markdown(f"""

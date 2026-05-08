@@ -8,11 +8,11 @@ from streamlit_calendar import calendar
 # --- 1. CONFIGURACIÓN DE PÁGINA Y HORA ---
 st.set_page_config(page_title="Kiosco Mis Princesas PRO", page_icon="🏪", layout="wide")
 
-# Configuración precisa para Venezuela (Palmira)
+# Configuración precisa para Venezuela (Caracas/Palmira)
 zona_venezuela = pytz.timezone('America/Caracas')
 hora_actual = datetime.now(zona_venezuela)
 
-# --- 2. ESTILO VISUAL PROFESIONAL (CSS CUSTOM) ---
+# --- 2. ESTILO VISUAL PREMIUM (CSS CUSTOM COMPLETO) ---
 st.markdown("""
     <style>
     /* Fondo principal y textos */
@@ -43,6 +43,11 @@ st.markdown("""
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     }
     
+    /* Ajuste para evitar puntos suspensivos en valores */
+    [data-testid="stMetricValue"] {
+        font-size: 1.8rem !important;
+    }
+
     /* Botones y Tabs */
     .stButton>button {
         border-radius: 10px;
@@ -53,7 +58,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # --- 3. CONEXIÓN A GOOGLE SHEETS ---
-# 🚨 RECUERDA PEGAR TU LINK AQUÍ
+# 🚨 PEGA TU LINK DE GOOGLE SHEETS AQUÍ
 URL_HOJA = "TU_LINK_DE_GOOGLE_SHEETS_AQUI"
 
 @st.cache_data(ttl=60)
@@ -67,7 +72,7 @@ def cargar_datos(pestana):
             return pd.DataFrame(columns=["Fecha"])
         return pd.DataFrame(columns=["Producto", "Precio", "Stock"])
 
-# --- 4. SEGURIDAD Y ESTADO DE SESIÓN ---
+# --- 4. SEGURIDAD Y ESTADO DE SESIÓN (ANTI-ERRORES) ---
 if 'usuario' not in st.session_state:
     st.session_state.usuario = None
     st.session_state.ventas_acumuladas = 0.0
@@ -80,139 +85,120 @@ if st.session_state.usuario is None:
         st.title("🔐 Acceso al Sistema")
         st.markdown("---")
         with st.form("login_form"):
-            u = st.text_input("Identificador de Usuario:").strip().lower()
-            p = st.text_input("PIN de Seguridad (4 dígitos):", type="password")
+            u = st.text_input("Usuario:").strip().lower()
+            p = st.text_input("PIN de Seguridad:", type="password")
             
             if st.form_submit_button("🚀 INICIAR TURNO", use_container_width=True):
                 if u in ["estefany", "milagros", "gabriela", "mario"] and p == "2984":
-                    # Configuración inmediata de sesión
                     st.session_state.usuario = u.capitalize()
                     st.session_state.entrada = hora_actual 
                     
-                    # Sincronización de asistencia
                     try:
                         fecha_hoy = hora_actual.strftime('%Y-%m-%d')
                         df_asist = cargar_datos("Asistencia")
                         if df_asist.empty or fecha_hoy not in df_asist["Fecha"].astype(str).values:
-                            nueva_fila = pd.DataFrame([{"Fecha": fecha_hoy}])
-                            df_total = pd.concat([df_asist, nueva_fila], ignore_index=True)
+                            nueva_f = pd.DataFrame([{"Fecha": fecha_hoy}])
+                            df_total = pd.concat([df_asist, nueva_f], ignore_index=True)
                             conn = st.connection("gsheets", type=GSheetsConnection)
                             conn.update(spreadsheet=URL_HOJA, worksheet="Asistencia", data=df_total)
-                            st.toast(f"✅ Asistencia registrada: {fecha_hoy}")
                     except Exception:
-                        st.toast("⚠️ Nota: Turno iniciado localmente (Sin red).")
+                        st.toast("⚠️ Nota: Conexión limitada. Datos guardados localmente.")
                     
                     st.rerun()
                 else:
-                    st.error("🚫 Acceso denegado. Revisa tus datos.")
+                    st.error("❌ Credenciales incorrectas")
 
-# --- INTERFAZ PRINCIPAL (SOLO TRAS LOGIN EXITOSO) ---
+# --- INTERFAZ PRINCIPAL (SOLO TRAS LOGIN) ---
 else:
     # 1. Sidebar de Control
     with st.sidebar:
         st.markdown(f"""
             <div class="user-card">
                 <h2 style='margin:0; color:white;'>👤 {st.session_state.usuario}</h2>
-                <p style='margin:0; color:#00ffcc; font-size: 0.9rem;'>Kiosco Activo</p>
+                <p style='margin:0; color:#00ffcc; font-size: 0.9rem;'>Sesión en curso</p>
             </div>
         """, unsafe_allow_html=True)
         
         if st.session_state.entrada:
-            c_side1, c_side2 = st.columns(2)
-            c_side1.metric("Fecha", st.session_state.entrada.strftime('%d/%m'))
-            c_side2.metric("Hora", st.session_state.entrada.strftime('%H:%M'))
+            st.write(f"📅 **Fecha:** {st.session_state.entrada.strftime('%d/%m/%Y')}")
+            st.write(f"⏰ **Entrada:** {st.session_state.entrada.strftime('%H:%M')}")
         
         st.divider()
-        
-        if st.button("🔴 FINALIZAR TURNO", use_container_width=True, type="primary"):
+        if st.button("🔴 CERRAR TURNO", use_container_width=True, type="primary"):
             st.session_state.usuario = None
             st.session_state.entrada = None
             st.rerun()
 
-    # 2. Tabs de Operación
+    # 2. Tabs de Navegación
     df_inv = cargar_datos("Hoja 1")
-    t1, t2, t3, t4 = st.tabs(["📊 DASHBOARD", "📦 INVENTARIO", "💰 PUNTO DE VENTA", "📅 ASISTENCIA"])
+    t1, t2, t3, t4 = st.tabs(["📊 DASHBOARD", "📦 INVENTARIO", "💰 VENTAS", "📅 ASISTENCIA"])
 
-  # Busca la parte de "TAB 1: DASHBOARD" y reemplaza las métricas por estas:
-with t1:
-    st.markdown("### Resumen de Operaciones")
-    c1, c2, c3 = st.columns(3)
-    
-    # Aseguramos que solo sume los números del inventario
-    stock_limpio = pd.to_numeric(df_inv['Stock'], errors='coerce').fillna(0)
-    total_stk = int(stock_limpio.sum())
-    alertas = len(df_inv[stock_limpio < 5])
-    
-    # MÉTRICAS CORREGIDAS:
-    # Aquí es donde estaba el error. Ahora usamos ventas_acumuladas directamente.
-    c1.metric("Ventas del Turno", f"$ {st.session_state.ventas_acumuladas:,.2f}")
-    c2.metric("Total en Inventario", f"{total_stk} und")
-    c3.metric("Productos Críticos", alertas, delta_color="inverse")
+    # TAB 1: DASHBOARD
+    with t1:
+        st.markdown("### Resumen del Kiosco")
+        c1, c2, c3 = st.columns(3)
+        
+        stock_limpio = pd.to_numeric(df_inv['Stock'], errors='coerce').fillna(0)
+        total_stk = int(stock_limpio.sum())
+        criticos = len(df_inv[stock_limpio < 5])
+        
+        c1.metric("Ventas Hoy", f"$ {st.session_state.ventas_acumuladas:,.2f}")
+        c2.metric("Stock Total", f"{total_stk} und")
+        c3.metric("Stock Crítico", criticos, delta_color="inverse")
+        
+        if criticos > 0:
+            st.warning(f"⚠️ Atención: Tienes {criticos} productos por agotarse.")
 
     # TAB 2: INVENTARIO
     with t2:
         st.markdown("### 📦 Gestión de Mercancía")
-        busq = st.text_input("🔍 Filtrar productos...", placeholder="Escribe el nombre...")
-        
+        busq = st.text_input("🔍 Buscar artículo...")
         df_f = df_inv[df_inv['Producto'].str.contains(busq, case=False, na=False)] if busq else df_inv
         st.dataframe(df_f, use_container_width=True, hide_index=True)
         
-        with st.expander("✨ Registrar Nuevo Artículo"):
+        with st.expander("✨ Registrar Nuevo Producto"):
             with st.form("form_add"):
                 col_n, col_p, col_s = st.columns([2, 1, 1])
-                n_new = col_n.text_input("Nombre del producto")
-                p_new = col_p.number_input("Precio ($)", min_value=0.0, step=0.01)
-                s_new = col_s.number_input("Stock inicial", min_value=0, step=1)
-                
-                if st.form_submit_button("📥 GUARDAR EN NUBE"):
-                    if n_new:
-                        nuevo_df = pd.DataFrame([{"Producto": n_new, "Precio": p_new, "Stock": s_new}])
-                        df_actualizado = pd.concat([df_inv, nuevo_df], ignore_index=True)
-                        conn = st.connection("gsheets", type=GSheetsConnection)
-                        conn.update(spreadsheet=URL_HOJA, worksheet="Hoja 1", data=df_actualizado)
-                        st.success("✅ Producto registrado con éxito.")
+                n_p = col_n.text_input("Nombre")
+                p_p = col_p.number_input("Precio ($)", min_value=0.0)
+                s_p = col_s.number_input("Stock", min_value=0)
+                if st.form_submit_button("GUARDAR EN NUBE"):
+                    if n_p:
+                        nuevo = pd.DataFrame([{"Producto": n_p, "Precio": p_p, "Stock": s_p}])
+                        df_final = pd.concat([df_inv, nuevo], ignore_index=True)
+                        st.connection("gsheets", type=GSheetsConnection).update(spreadsheet=URL_HOJA, worksheet="Hoja 1", data=df_final)
+                        st.success("¡Producto añadido!")
                         st.rerun()
 
     # TAB 3: PUNTO DE VENTA
     with t3:
-        st.markdown("### 💰 Ventas del Turno")
+        st.markdown("### 💰 Registro de Ventas")
         if not df_inv.empty:
             col_v1, col_v2 = st.columns([2, 1])
             with col_v1:
-                sel = st.selectbox("Seleccionar producto:", df_inv['Producto'].tolist())
-                datos_sel = df_inv[df_inv['Producto'] == sel].iloc[0]
-                precio_v = float(datos_sel['Precio'])
-                stock_v = int(pd.to_numeric(datos_sel['Stock'], errors='coerce') or 0)
+                sel = st.selectbox("Seleccione producto:", df_inv['Producto'].tolist())
+                d = df_inv[df_inv['Producto'] == sel].iloc[0]
+                p_v = float(d['Precio'])
+                s_v = int(pd.to_numeric(d['Stock'], errors='coerce') or 0)
             
             with col_v2:
-                st.info(f"**Precio:** ${precio_v:,.2f}  \n**Disponible:** {stock_v} und")
+                st.info(f"**Precio:** ${p_v:,.2f}  \n**Disponible:** {s_v} und")
             
-            if stock_v > 0:
-                if st.button(f"🛒 CONFIRMAR VENTA - ${precio_v}", use_container_width=True, type="primary"):
+            if s_v > 0:
+                if st.button(f"🛒 CONFIRMAR VENTA - ${p_v}", use_container_width=True, type="primary"):
                     idx = df_inv[df_inv['Producto'] == sel].index[0]
-                    st.session_state.ventas_acumuladas += precio_v
-                    df_inv.at[idx, 'Stock'] = stock_v - 1
-                    
-                    conn = st.connection("gsheets", type=GSheetsConnection)
-                    conn.update(spreadsheet=URL_HOJA, worksheet="Hoja 1", data=df_inv)
+                    st.session_state.ventas_acumuladas += p_v
+                    df_inv.at[idx, 'Stock'] = s_v - 1
+                    st.connection("gsheets", type=GSheetsConnection).update(spreadsheet=URL_HOJA, worksheet="Hoja 1", data=df_inv)
                     st.balloons()
-                    st.toast(f"¡Venta registrada! - {sel}")
                     st.rerun()
             else:
-                st.error("❌ No hay stock disponible para este producto.")
+                st.error("❌ Sin existencia.")
 
-    # TAB 4: CALENDARIO DE ASISTENCIA
+    # TAB 4: CALENDARIO
     with t4:
         st.markdown("### 📅 Historial de Turnos")
         df_as = cargar_datos("Asistencia")
         if not df_as.empty:
-            eventos_cal = []
-            for fecha in df_as["Fecha"]:
-                eventos_cal.append({
-                    "title": "Turno",
-                    "start": str(fecha),
-                    "end": str(fecha),
-                    "color": "#00ffcc",
-                    "textColor": "#0e1117"
-                })
-            calendar(events=eventos_cal, options={"initialView": "dayGridMonth", "locale": "es"})
+            evs = [{"title": "TURNO", "start": str(f), "end": str(f), "color": "#00ffcc"} for f in df_as["Fecha"]]
+            calendar(events=evs, options={"initialView": "dayGridMonth", "locale": "es"})

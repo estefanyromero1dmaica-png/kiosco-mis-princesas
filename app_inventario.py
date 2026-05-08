@@ -52,7 +52,7 @@ st.markdown("""
 
 # --- 3. CONEXIÓN A DATOS (GOOGLE SHEETS) ---
 # 🚨 PEGA TU LINK DE GOOGLE SHEETS AQUÍ ABAJO
-URL_HOJA = "TU_LINK_DE_GOOGLE_SHEETS_AQUI"
+URL_HOJA = "https://docs.google.com/spreadsheets/d/108HEgQ1pkzxjxwYEU2YqhvkWGdkar7rvEPTVyI2CUAE/edit?gid=2121698156#gid=2121698156"
 
 def cargar_datos(pestana):
     try:

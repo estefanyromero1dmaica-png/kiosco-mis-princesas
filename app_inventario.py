@@ -52,7 +52,7 @@ st.markdown("""
 
 # --- 3. CONEXIÓN A DATOS (GOOGLE SHEETS) ---
 # 🚨 PEGA TU LINK DE GOOGLE SHEETS AQUÍ ABAJO
-URL_HOJA = "https://docs.google.com/spreadsheets/d/108HEgQ1pkzxjxwYEU2YqhvkWGdkar7rvEPTVyI2CUAE/edit?gid=2121698156#gid=2121698156"
+URL_HOJA = "TU_LINK_DE_GOOGLE_SHEETS_AQUI"
 
 def cargar_datos(pestana):
     try:
@@ -67,7 +67,6 @@ def cargar_datos(pestana):
             df['Stock'] = pd.to_numeric(df['Stock'], errors='coerce').fillna(0).astype(int)
         return df
     except Exception:
-        # Estructura de emergencia si falla la conexión o la hoja es nueva
         if pestana == "Asistencia":
             return pd.DataFrame(columns=["Fecha", "Usuario", "Hora_Entrada"])
         return pd.DataFrame(columns=["Producto", "Precio", "Stock"])
@@ -90,12 +89,10 @@ if st.session_state.usuario is None:
             
             if st.form_submit_button("🚀 INICIAR TURNO", use_container_width=True):
                 if u in ["estefany", "milagros", "gabriela", "mario"] and p == "2984":
-                    # Definimos datos de entrada
                     st.session_state.usuario = u.capitalize()
                     st.session_state.entrada = datetime.now(zona_venezuela)
                     st.session_state.ventas_acumuladas = 0
                     
-                    # REGISTRO DE ASISTENCIA (QUIÉN Y A QUÉ HORA)
                     try:
                         df_asist = cargar_datos("Asistencia")
                         nueva_asist = pd.DataFrame([{
@@ -106,17 +103,14 @@ if st.session_state.usuario is None:
                         df_total = pd.concat([df_asist, nueva_asist], ignore_index=True)
                         conn = st.connection("gsheets", type=GSheetsConnection)
                         conn.update(spreadsheet=URL_HOJA, worksheet="Asistencia", data=df_total)
-                        st.toast(f"✅ Turno iniciado por {st.session_state.usuario}")
                     except:
-                        st.toast("⚠️ Nota: Registro guardado solo localmente.")
-                    
+                        pass
                     st.rerun()
                 else:
                     st.error("🚫 Credenciales incorrectas")
 
 # --- INTERFAZ PRINCIPAL (APP ACTIVA) ---
 else:
-    # 1. SIDEBAR: ESTADO DEL TURNO
     with st.sidebar:
         st.markdown(f"""
             <div class="user-card">
@@ -134,7 +128,6 @@ else:
             st.session_state.entrada = None
             st.rerun()
 
-    # 2. CUERPO PRINCIPAL: TABS
     df_inv = cargar_datos("Hoja 1")
     t1, t2, t3, t4 = st.tabs(["📊 DASHBOARD", "📦 INVENTARIO", "💰 VENTAS", "📅 HISTORIAL"])
 
@@ -150,34 +143,25 @@ else:
         c1.metric("Ventas Turno", f"$ {int(st.session_state.ventas_acumuladas)}")
         c2.metric("Stock en Tienda", f"{total_und} und")
         c3.metric("Stock Crítico", bajos, delta_color="inverse")
-        
-        if bajos > 0:
-            st.warning(f"🚨 Tienes {bajos} productos con menos de 5 unidades.")
 
     # TAB 2: INVENTARIO
     with t2:
         st.markdown("### 📦 Control de Mercancía")
-        busqueda = st.text_input("🔍 Filtrar por nombre...")
-        df_f = df_inv[df_inv['Producto'].str.contains(busqueda, case=False, na=False)] if busqueda else df_inv
+        st.dataframe(df_inv, use_container_width=True, hide_index=True)
         
-        # Mostramos la tabla limpia sin decimales
-        st.dataframe(df_f, use_container_width=True, hide_index=True)
-        
-        with st.expander("✨ Registrar Entrada de Nuevo Producto"):
+        with st.expander("✨ Registrar Nuevo Producto"):
             with st.form("form_nuevo"):
-                col_n, col_p, col_s = st.columns([2, 1, 1])
-                n_prod = col_n.text_input("Nombre del Producto")
-                p_prod = col_p.number_input("Precio ($)", min_value=0, step=1)
-                s_prod = col_s.number_input("Stock Inicial", min_value=0, step=1)
+                n_prod = st.text_input("Nombre del Producto")
+                p_prod = st.number_input("Precio ($)", min_value=0, step=1)
+                s_prod = st.number_input("Stock Inicial", min_value=0, step=1)
                 
-                if st.form_submit_button("📥 GUARDAR EN NUBE"):
+                if st.form_submit_button("📥 GUARDAR PRODUCTO"):
                     if n_prod:
                         nuevo_df = pd.DataFrame([{"Producto": n_prod, "Precio": int(p_prod), "Stock": int(s_prod)}])
                         df_act = pd.concat([df_inv, nuevo_df], ignore_index=True)
                         conn = st.connection("gsheets", type=GSheetsConnection)
                         conn.update(spreadsheet=URL_HOJA, worksheet="Hoja 1", data=df_act)
-                        st.cache_data.clear() # IMPORTANTE: Limpia cache para evitar errores
-                        st.success(f"✅ {n_prod} guardado.")
+                        st.cache_data.clear() 
                         st.rerun()
 
     # TAB 3: PUNTO DE VENTA
@@ -192,8 +176,8 @@ else:
             
             st.info(f"💵 Precio: ${p_v} | 📦 Disponibles: {s_v}")
             
-            if s_v > 0:
-                if st.button(f"🛒 VENDER {sel_p}", use_container_width=True, type="primary"):
+            if st.button(f"🛒 VENDER {sel_p}", use_container_width=True, type="primary"):
+                if s_v > 0:
                     idx_v = df_inv[df_inv['Producto'] == sel_p].index[0]
                     st.session_state.ventas_acumuladas += p_v
                     df_inv.at[idx_v, 'Stock'] = s_v - 1
@@ -201,19 +185,15 @@ else:
                     conn = st.connection("gsheets", type=GSheetsConnection)
                     conn.update(spreadsheet=URL_HOJA, worksheet="Hoja 1", data=df_inv)
                     st.cache_data.clear()
-                    st.balloons()
                     st.rerun()
-            else:
-                st.error("❌ Producto agotado.")
+                else:
+                    st.error("❌ Producto agotado.")
 
     # TAB 4: HISTORIAL DE ASISTENCIA
     with t4:
-        st.markdown("### 📅 Registro de Entradas (Quién y Cuándo)")
+        st.markdown("### 📅 Registro de Entradas")
         df_asis = cargar_datos("Asistencia")
         if not df_asis.empty:
-            # Tabla detallada de ingresos
             st.dataframe(df_asis.sort_values(by="Hora_Entrada", ascending=False), use_container_width=True, hide_index=True)
-            
-            # Calendario visual
             evs = [{"title": f"{r['Usuario']} - {r['Hora_Entrada']}", "start": str(r['Fecha']), "color": "#00ffcc"} for i, r in df_asis.iterrows()]
             calendar(events=evs, options={"initialView": "dayGridMonth", "locale": "es"})

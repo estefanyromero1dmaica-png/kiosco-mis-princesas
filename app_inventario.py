@@ -133,22 +133,21 @@ else:
     df_inv = cargar_datos("Hoja 1")
     t1, t2, t3, t4 = st.tabs(["📊 DASHBOARD", "📦 INVENTARIO", "💰 PUNTO DE VENTA", "📅 ASISTENCIA"])
 
-    # TAB 1: DASHBOARD
-    with t1:
-        st.markdown("### Resumen de Hoy")
-        c1, c2, c3 = st.columns(3)
-        
-        # Cálculos de stock con limpieza de datos
-        stock_limpio = pd.to_numeric(df_inv['Stock'], errors='coerce').fillna(0)
-        total_stk = stock_limpio.sum()
-        alertas = len(df_inv[stock_limpio < 5])
-        
-        c1.metric("Ingresos Turno", f"$ {st.session_state.ventas_acumuladas:,.2f}")
-        c2.metric("Stock Total", f"{int(total_stk)} und")
-        c3.metric("Alertas Críticas", alertas, delta_color="inverse")
-        
-        if alertas > 0:
-            st.warning(f"⚠️ ¡Atención! Hay {alertas} productos con stock menor a 5 unidades.")
+  # Busca la parte de "TAB 1: DASHBOARD" y reemplaza las métricas por estas:
+with t1:
+    st.markdown("### Resumen de Operaciones")
+    c1, c2, c3 = st.columns(3)
+    
+    # Aseguramos que solo sume los números del inventario
+    stock_limpio = pd.to_numeric(df_inv['Stock'], errors='coerce').fillna(0)
+    total_stk = int(stock_limpio.sum())
+    alertas = len(df_inv[stock_limpio < 5])
+    
+    # MÉTRICAS CORREGIDAS:
+    # Aquí es donde estaba el error. Ahora usamos ventas_acumuladas directamente.
+    c1.metric("Ventas del Turno", f"$ {st.session_state.ventas_acumuladas:,.2f}")
+    c2.metric("Total en Inventario", f"{total_stk} und")
+    c3.metric("Productos Críticos", alertas, delta_color="inverse")
 
     # TAB 2: INVENTARIO
     with t2:
